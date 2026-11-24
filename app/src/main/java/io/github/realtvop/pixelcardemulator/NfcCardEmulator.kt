@@ -36,15 +36,18 @@ private class OemNfcCardEmulator(
     override fun activate(uid: ByteArray) {
         require(uid.size in SupportedUidSizes) { "Unsupported UID length" }
         val api = resolveApi()
+        // Google's NFC stack needs the minimal Pixel profile. Other vendors such as Samsung use
+        // the CTS Type-4A profile, same as the raw NCI catalog.
+        val profile = RawNfcDeviceCatalog.profile
         withOptionalDiscoveryRestart {
             invoke(
                 api,
                 enabled = true,
-                bitFrameSdd = 0x04,
-                platformConfig = 0x00,
-                selInfo = 0x00,
+                bitFrameSdd = profile.bitFrameSdd.toInt(),
+                platformConfig = profile.platformConfig.toInt(),
+                selInfo = profile.selInfo.toInt(),
                 nfcid1 = uid,
-                rats = 0x00,
+                rats = profile.rats.toInt(),
             )
         }
     }
