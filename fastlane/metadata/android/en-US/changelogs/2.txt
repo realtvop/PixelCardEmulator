@@ -1,0 +1,2 @@
+- Fix NFC-A emulation on Samsung devices running Android 17 by using the device vendor's NFC-A profile.
+- Refresh the automatic card picker when it opens again and close it when the screen turns off.
