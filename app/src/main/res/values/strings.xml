@@ -15,6 +15,7 @@
     <string name="save">Save</string>
     <string name="show_uid">Show UID</string>
     <string name="hide_uid">Hide UID</string>
+    <string name="generate_random_uid">Generate random UID</string>
     <string name="delete_card">Delete card</string>
     <string name="delete_card_title">Delete “%1$s”?</string>
     <string name="delete_card_message">This removes the card from your list.</string>

@@ -33,6 +33,7 @@ import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
 import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -86,9 +87,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import kotlin.random.Random
 
 private val UidSizes = listOf(4, 7, 10)
 private const val MaxNameLength = 32
+private const val NfcACascadeTag: Byte = 0x88.toByte()
 
 /** Keeps the form from stretching across unfolded or landscape screens. */
 private val FormMaxWidth = 560.dp
@@ -224,18 +227,35 @@ fun CardEditorScreen(
                     textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
                     label = { Text(stringResource(R.string.uid_hex)) },
                     trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                // Hiding a UID that is being typed also puts the keyboard away.
-                                if (uidShown && uidFocused) focusManager.clearFocus()
-                                uidShown = !uidShown
-                            },
-                            shapes = IconButtonDefaults.shapes(),
-                        ) {
-                            Icon(
-                                painterResource(if (uidShown) R.drawable.ic_visibility_off else R.drawable.ic_visibility),
-                                contentDescription = stringResource(if (uidShown) R.string.hide_uid else R.string.show_uid),
-                            )
+                        Row {
+                            if (card == null) {
+                                IconButton(
+                                    onClick = {
+                                        typedUid.setTextAndPlaceCursorAtEnd(generateRandomUid(uidSize))
+                                        uidShown = true
+                                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                    },
+                                    shapes = IconButtonDefaults.shapes(),
+                                ) {
+                                    Icon(
+                                        painterResource(R.drawable.ic_dice),
+                                        contentDescription = stringResource(R.string.generate_random_uid),
+                                    )
+                                }
+                            }
+                            IconButton(
+                                onClick = {
+                                    // Hiding a UID that is being typed also puts the keyboard away.
+                                    if (uidShown && uidFocused) focusManager.clearFocus()
+                                    uidShown = !uidShown
+                                },
+                                shapes = IconButtonDefaults.shapes(),
+                            ) {
+                                Icon(
+                                    painterResource(if (uidShown) R.drawable.ic_visibility_off else R.drawable.ic_visibility),
+                                    contentDescription = stringResource(if (uidShown) R.string.hide_uid else R.string.show_uid),
+                                )
+                            }
                         }
                     },
                     supportingText = {
@@ -412,6 +432,16 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+private fun generateRandomUid(size: Int): String {
+    val bytes = ByteArray(size)
+    // NFC-A reserves the cascade tag in UID0 for 4-byte UIDs and UID3 for longer UIDs.
+    val cascadeTagIndex = if (size == 4) 0 else 3
+    do {
+        Random.nextBytes(bytes)
+    } while (bytes[cascadeTagIndex] == NfcACascadeTag)
+    return bytes.toHex()
 }
 
 /** Keeps only hex digits, so a pasted "04:A2:24" still works, uppercased and capped at [max] digits. */
