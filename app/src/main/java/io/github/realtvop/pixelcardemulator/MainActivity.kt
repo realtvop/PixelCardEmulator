@@ -73,6 +73,7 @@ private const val ScrimAlpha = 0.4f
 
 class MainActivity : ComponentActivity() {
     private val viewModel: CardsViewModel by viewModels()
+    private val updates: UpdateViewModel by viewModels()
     private var automaticPickerEnabled by mutableStateOf(false)
     private val wirelessPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -162,6 +163,8 @@ class MainActivity : ComponentActivity() {
                         onPermissionBannerClick = viewModel::showPermissionPrompt,
                         automaticPickerEnabled = automaticPickerEnabled,
                         onAutomaticPickerClick = ::openAutomaticPickerSettings,
+                        updateVersion = updates.availableVersion,
+                        onSkipUpdate = updates::skip,
                     )
                 }
 

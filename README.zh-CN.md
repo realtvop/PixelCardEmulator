@@ -60,7 +60,7 @@
 
 - **仅限 UID**：仅模拟 ISO 14443-A 的 UID（`NFCID1`）。**不**模拟加密的卡片数据（例如 MIFARE Classic 扇区、DESFire 加密或银行支付卡）。
 - **仅限授权使用**：只能用于自己拥有或已获明确授权测试的卡片和系统。
-- **仅在本机处理**：网络权限仅用于设置权限时连接同一设备上的 Android 无线 ADB 服务。应用不会上传卡片 UID，也不包含分析或遥测功能。
+- **仅在本机处理**：网络权限用于设置权限时连接同一设备上的 Android 无线 ADB 服务。从 GitHub Releases 下载的 APK 还会每天最多向 GitHub 查询一次最新版本，用于显示更新横幅；F-Droid 版和自行构建的 APK 不会联网检查。应用不会上传卡片 UID，也不包含分析或遥测功能。
 - **原始 NCI 安全机制**：原始 NCI 模式会临时修改 NFC 控制器参数，并自动快照和恢复原始配置。
 - **主动授予权限**：只有用户明确选择 Shizuku、无线调试或电脑 ADB 设置后，才会授予 `WRITE_SECURE_SETTINGS` 权限。
 
@@ -90,7 +90,7 @@ F-Droid 的商店文案、更新日志和模拟器截图已放在 [`fastlane/met
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-推送例如 `v0.1` 的 tag 后，workflow 会构建带签名 APK，并创建附带 APK 的 GitHub Draft Release。每次 push commit 也会触发 **Development Build**，生成未签名 debug APK 作为 Actions artifact，但不会发布 Release。
+推送例如 `v0.1` 的 tag 后，workflow 会构建带签名 APK，并创建附带 APK 的 GitHub Draft Release。workflow 会以 `-PgithubUpdateCheck=true` 构建，从而开启应用内更新横幅。只有正式发布后的 Release 才会被提示（草稿和预发布会被跳过），且 tag 须为 `v0.1.2` 这类纯版本号。每次 push commit 也会触发 **Development Build**，生成未签名 debug APK 作为 Actions artifact，但不会发布 Release。
 
 ## 许可证
 

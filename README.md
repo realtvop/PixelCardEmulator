@@ -60,7 +60,7 @@ These demo screenshots were captured from the Android Emulator. The editor uses 
 
 - **UID Only**: Emulates only the ISO 14443-A UID (`NFCID1`). Does **not** emulate encrypted card data (e.g. MIFARE Classic sectors, DESFire crypto, or bank payment cards).
 - **Authorized Use Only**: Use the app only with cards and systems you own or are explicitly authorized to test.
-- **On-Device Only**: Network access is used only to connect to Android's wireless ADB service on the same device during permission setup. The app does not upload card UIDs and includes no analytics or telemetry.
+- **On-Device Only**: Network access is used to connect to Android's wireless ADB service on the same device during permission setup. The APK from GitHub Releases also asks GitHub for the latest release at most once a day, to show an update banner; F-Droid and self-built APKs never do. The app does not upload card UIDs and includes no analytics or telemetry.
 - **Raw NCI Safety**: Raw NCI mode temporarily changes NFC controller parameters and automatically snapshots and restores the original configuration.
 - **Explicit Permission Grant**: `WRITE_SECURE_SETTINGS` is granted only after the user explicitly chooses Shizuku, wireless debugging, or computer ADB setup.
 
@@ -90,7 +90,7 @@ Keep `release-keystore.jks` and `keystore.properties` private. For the release w
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-Push a tag such as `v0.1` to build the signed APK and create a draft GitHub release with the APK attached. Every pushed commit also produces an unsigned debug APK in the **Development Build** workflow's Actions artifact; it is not published as a release.
+Push a tag such as `v0.1` to build the signed APK and create a draft GitHub release with the APK attached. The workflow builds with `-PgithubUpdateCheck=true`, which turns on the in-app update banner. The banner offers a release only once it is published (drafts and pre-releases are skipped) and only if its tag is a plain version such as `v0.1.2`. Every pushed commit also produces an unsigned debug APK in the **Development Build** workflow's Actions artifact; it is not published as a release.
 
 ## License
 

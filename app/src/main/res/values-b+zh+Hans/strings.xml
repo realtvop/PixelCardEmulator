@@ -77,6 +77,11 @@
     <string name="language_system_default">跟随系统</string>
     <string name="star_on_github">在 GitHub 上点个 Star</string>
 
+    <!-- Banner at the top of the card list when GitHub has a newer release -->
+    <string name="update_available">发现新版本 %1$s</string>
+    <string name="download">下载</string>
+    <string name="skip_this_version">跳过此版本</string>
+
     <!-- Emulation status and errors shown in the list and in dialogs -->
     <string name="status_activating">正在激活 %1$s…</string>
     <string name="status_restoring">正在恢复 NFC 默认设置…</string>

@@ -34,6 +34,11 @@ if (releaseTaskRequested && !releaseSigningConfigured) {
     error("Release signing is not configured. Create keystore.properties or set the ANDROID_KEYSTORE_* environment variables.")
 }
 
+// Only the APK attached to GitHub releases asks GitHub for newer versions; the release workflow passes
+// -PgithubUpdateCheck=true. F-Droid signs its own builds, so the GitHub APK could not be installed over them,
+// and debug and local builds have no use for the banner either.
+val githubUpdateCheck = providers.gradleProperty("githubUpdateCheck").map(String::toBoolean).getOrElse(false)
+
 android {
     namespace = "io.github.realtvop.pixelcardemulator"
     compileSdk = 37
@@ -45,6 +50,8 @@ android {
         targetSdk = 37
         versionCode = 2
         versionName = "0.1.1"
+
+        buildConfigField("boolean", "GITHUB_UPDATE_CHECK", githubUpdateCheck.toString())
     }
 
     if (releaseSigningConfigured) {
@@ -73,6 +80,7 @@ android {
 
     buildFeatures {
         aidl = true
+        buildConfig = true
         compose = true
     }
 }
@@ -98,4 +106,6 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
+
+    testImplementation(libs.junit)
 }

@@ -43,7 +43,7 @@ jobs:
           test -n "$ANDROID_KEY_ALIAS"
           test -n "$ANDROID_KEY_PASSWORD"
           chmod +x ./gradlew
-          ./gradlew --no-daemon --stacktrace assembleRelease
+          ./gradlew --no-daemon --stacktrace -PgithubUpdateCheck=true assembleRelease
           test -f app/build/outputs/apk/release/app-release.apk
 
       - name: Create or update draft GitHub release

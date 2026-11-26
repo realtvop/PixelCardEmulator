@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.AlertDialog
@@ -105,6 +106,8 @@ fun CardListScreen(
     onPermissionBannerClick: () -> Unit = {},
     automaticPickerEnabled: Boolean = false,
     onAutomaticPickerClick: () -> Unit = {},
+    updateVersion: String? = null,
+    onSkipUpdate: () -> Unit = {},
     managementEnabled: Boolean = true,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -113,6 +116,9 @@ fun CardListScreen(
     var appMenuOpen by remember { mutableStateOf(false) }
     var languageDialogOpen by remember { mutableStateOf(false) }
     val uriHandler = LocalUriHandler.current
+    // The banner stays composed while it animates away, after updateVersion has gone back to null.
+    var shownUpdateVersion by remember { mutableStateOf(updateVersion.orEmpty()) }
+    if (updateVersion != null) shownUpdateVersion = updateVersion
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -220,6 +226,13 @@ fun CardListScreen(
                 AnimatedVisibility(visible = showPermissionBanner) {
                     PermissionBanner(onClick = onPermissionBannerClick)
                 }
+                AnimatedVisibility(visible = updateVersion != null) {
+                    UpdateBanner(
+                        version = shownUpdateVersion,
+                        onDownload = { uriHandler.openUri(LatestReleaseUrl) },
+                        onSkip = onSkipUpdate,
+                    )
+                }
             }
         },
     ) { innerPadding ->
@@ -298,6 +311,34 @@ private fun PermissionBanner(onClick: () -> Unit) {
         ),
     ) {
         Text(stringResource(R.string.permission_required))
+    }
+}
+
+/** Download opens the release page in the browser. Closing it skips this version, so it only returns for a newer one. */
+@Composable
+private fun UpdateBanner(version: String, onDownload: () -> Unit, onSkip: () -> Unit) {
+    ListItem(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        leadingContent = {
+            Icon(painterResource(R.drawable.ic_download), contentDescription = null)
+        },
+        trailingContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = onDownload) { Text(stringResource(R.string.download)) }
+                IconButton(onClick = onSkip) {
+                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.skip_this_version))
+                }
+            }
+        },
+        shapes = ListItemDefaults.shapes(shape = MaterialTheme.shapes.large),
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            leadingContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            trailingContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        ),
+    ) {
+        Text(stringResource(R.string.update_available, version))
     }
 }
 
@@ -547,6 +588,7 @@ private fun CardListScreenPreview() {
             onLanguageSelected = {},
             showPermissionBanner = true,
             onPermissionBannerClick = {},
+            updateVersion = "0.2.0",
         )
     }
 }
