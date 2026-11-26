@@ -102,6 +102,10 @@
     <string name="oem_service_rejected">The NFC system service rejected the request.</string>
     <string name="oem_service_no_status">The NFC system service returned no status.</string>
     <string name="oem_unknown_status">Unknown NFC OEM status %1$d.</string>
+    <string name="oem_nfc_restart_failed">The card was turned off. Turn NFC off and on again in Settings.</string>
+    <string name="oem_nfc_restart_enable_failed">The card was turned off. Turn NFC on in Settings.</string>
+    <string name="oem_nfc_enable_failed">Could not turn NFC on. Turn on NFC in Settings.</string>
+    <string name="oem_restart_state_save_failed">Could not save the NFC restart state.</string>
 
     <!-- Raw NCI errors, shown when the NFC controller is driven directly -->
     <string name="raw_snapshot_incomplete">The saved NFC snapshot is incomplete.</string>
