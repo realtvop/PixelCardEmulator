@@ -98,6 +98,10 @@
     <string name="oem_service_rejected">NFC 系统服务拒绝了该请求。</string>
     <string name="oem_service_no_status">NFC 系统服务未返回状态。</string>
     <string name="oem_unknown_status">未知的 NFC 厂商状态码 %1$d。</string>
+    <string name="oem_nfc_restart_failed">卡片已停用。请在设置中关闭 NFC 后重新开启。</string>
+    <string name="oem_nfc_restart_enable_failed">卡片已停用。请在设置中开启 NFC。</string>
+    <string name="oem_nfc_enable_failed">无法开启 NFC。请在设置中开启 NFC。</string>
+    <string name="oem_restart_state_save_failed">无法保存 NFC 重启状态。</string>
 
     <!-- Raw NCI errors, shown when the NFC controller is driven directly -->
     <string name="raw_snapshot_incomplete">已保存的 NFC 快照不完整。</string>

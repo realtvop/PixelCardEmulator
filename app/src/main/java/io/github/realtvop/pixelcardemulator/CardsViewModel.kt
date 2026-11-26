@@ -326,6 +326,12 @@ class CardsViewModel(application: Application) : AndroidViewModel(application) {
                 if (error is ExperimentalRawConsentRequiredException) {
                     emulatorUiState = EmulatorUiState(experimentalRawConfirmationRequired = true)
                 } else {
+                    if (error is NfcRestartRequiredException && action !is PendingAction.Activate) {
+                        setActive(null)
+                        if (action is PendingAction.Deactivate) {
+                            action.deleteCardId?.let(::deleteStoredCard)
+                        }
+                    }
                     emulatorUiState = EmulatorUiState(error = error.message ?: localized(R.string.nfc_operation_failed))
                     pendingAction = null
                 }

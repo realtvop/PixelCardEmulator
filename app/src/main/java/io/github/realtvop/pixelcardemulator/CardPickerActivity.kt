@@ -155,7 +155,12 @@ class CardPickerActivity : ComponentActivity() {
                     emulator.activate(previous.uid.hexToBytes())
                     store.saveActiveCardId(previous.id)
                 } else {
-                    emulator.deactivate()
+                    try {
+                        emulator.deactivate()
+                    } catch (error: NfcRestartRequiredException) {
+                        store.saveActiveCardId(null)
+                        throw error
+                    }
                     store.saveActiveCardId(null)
                 }
             }.exceptionOrNull()

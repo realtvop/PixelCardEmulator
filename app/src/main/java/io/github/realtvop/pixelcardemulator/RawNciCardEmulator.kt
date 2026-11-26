@@ -29,8 +29,8 @@ private const val LaBitFrameSdd = 0x30
 private const val LaPlatformConfig = 0x31
 private const val LaSelInfo = 0x32
 private const val LaNfcid1 = 0x33
-private const val LiARatsTb1 = 0x58
-private const val LiAHistoricalBytes = 0x59
+internal const val LiARatsTb1 = 0x58
+internal const val LiAHistoricalBytes = 0x59
 
 private val SnapshotParameters = listOf(
     NfccConfigControl,
@@ -132,10 +132,10 @@ internal class RawNciCardEmulator(
         val snapshot = loadSnapshot().takeIf { hasPendingRestore }
         pollingControl.withPaused {
             if (snapshot != null) {
-                setConfig(snapshot.entries.map { it.key to it.value })
+                transport.setConfig(snapshot.entries.map { it.key to it.value })
                 requireUid(snapshot.getValue(LaNfcid1), R.string.raw_uid_not_restored)
             } else {
-                setConfig(
+                transport.setConfig(
                     listOf(
                         NfccConfigControl to byteArrayOf(0x01),
                         LaNfcid1 to ByteArray(0),
@@ -147,7 +147,7 @@ internal class RawNciCardEmulator(
         }
         if (snapshot != null && !uidMatches(snapshot.getValue(LaNfcid1))) {
             pollingControl.withPaused {
-                setConfig(snapshot.entries.map { it.key to it.value })
+                transport.setConfig(snapshot.entries.map { it.key to it.value })
                 Thread.sleep(120)
                 requireUid(snapshot.getValue(LaNfcid1), R.string.raw_original_uid_lost_after_resume)
             }
@@ -157,7 +157,7 @@ internal class RawNciCardEmulator(
     }
 
     private fun setProfile(uid: ByteArray, profile: RawProfile) {
-        setConfig(
+        transport.setConfig(
             listOf(
                 NfccConfigControl to byteArrayOf(0x00),
                 LaBitFrameSdd to byteArrayOf(profile.bitFrameSdd),
@@ -172,7 +172,7 @@ internal class RawNciCardEmulator(
     private fun setPreferredConfiguration(uid: ByteArray, profile: RawProfile) {
         if (RawNfcDeviceCatalog.prefersUidOnly) {
             val uidOnlyWorked = runCatching {
-                setConfig(listOf(LaNfcid1 to uid))
+                transport.setConfig(listOf(LaNfcid1 to uid))
                 requireUid(uid, R.string.raw_uid_only_not_retained)
             }.isSuccess
             if (uidOnlyWorked) return
@@ -181,13 +181,7 @@ internal class RawNciCardEmulator(
     }
 
     private fun readCompleteSnapshot(): Map<Int, ByteArray> {
-        val values = linkedMapOf<Int, ByteArray>()
-        runCatching { values.putAll(getConfig(SnapshotParameters)) }
-        for (parameter in SnapshotParameters) {
-            if (parameter !in values) {
-                runCatching { values.putAll(getConfig(listOf(parameter))) }
-            }
-        }
+        val values = transport.readConfig(SnapshotParameters)
         val missing = RequiredSnapshotParameters.filterNot(values::containsKey)
         if (missing.isNotEmpty()) {
             val parameters = missing.joinToString { "0x%02X".format(it) }
@@ -196,57 +190,8 @@ internal class RawNciCardEmulator(
         return values
     }
 
-    private fun setConfig(parameters: List<Pair<Int, ByteArray>>) {
-        val size = 1 + parameters.sumOf { 2 + it.second.size }
-        val payload = ByteArray(size)
-        payload[0] = parameters.size.toByte()
-        var offset = 1
-        parameters.forEach { (id, value) ->
-            payload[offset++] = id.toByte()
-            payload[offset++] = value.size.toByte()
-            value.copyInto(payload, offset)
-            offset += value.size
-        }
-        val response = transport.command(CoreSetConfig, payload)
-        val status = response.firstOrNull()?.toInt()?.and(0xFF)
-            ?: throw NfcEmulationException(context.getString(R.string.raw_set_config_empty))
-        if (status != 0) {
-            val rejected = if (response.size >= 2) {
-                response.drop(2).joinToString { "0x%02X".format(it.toInt() and 0xFF) }
-            } else {
-                context.getString(R.string.raw_unknown_parameters)
-            }
-            throw NfcEmulationException(context.getString(R.string.raw_set_config_failed, status, rejected))
-        }
-    }
-
-    private fun getConfig(ids: List<Int>): Map<Int, ByteArray> {
-        val request = byteArrayOf(ids.size.toByte(), *ids.map(Int::toByte).toByteArray())
-        val response = transport.command(CoreGetConfig, request)
-        if (response.size < 2) throw NfcEmulationException(context.getString(R.string.raw_get_config_malformed))
-        val status = response[0].toInt() and 0xFF
-        if (status != 0) throw NfcEmulationException(context.getString(R.string.raw_get_config_failed, status))
-
-        val count = response[1].toInt() and 0xFF
-        var offset = 2
-        return buildMap {
-            repeat(count) {
-                if (offset + 2 > response.size) {
-                    throw NfcEmulationException(context.getString(R.string.raw_config_truncated))
-                }
-                val id = response[offset++].toInt() and 0xFF
-                val length = response[offset++].toInt() and 0xFF
-                if (offset + length > response.size) {
-                    throw NfcEmulationException(context.getString(R.string.raw_parameter_truncated, id))
-                }
-                put(id, response.copyOfRange(offset, offset + length))
-                offset += length
-            }
-        }
-    }
-
     private fun uidMatches(uid: ByteArray): Boolean =
-        runCatching { getConfig(listOf(LaNfcid1))[LaNfcid1]?.contentEquals(uid) == true }.getOrDefault(false)
+        runCatching { transport.getConfig(listOf(LaNfcid1))[LaNfcid1]?.contentEquals(uid) == true }.getOrDefault(false)
 
     private fun requireUid(uid: ByteArray, @StringRes messageRes: Int) {
         if (!uidMatches(uid)) throw NfcEmulationException(context.getString(messageRes))
@@ -290,7 +235,7 @@ internal class RawNciCardEmulator(
     }
 }
 
-private class RawNciTransport(private val context: Context, private val adapter: NfcAdapter?) {
+internal class RawNciTransport(private val context: Context, private val adapter: NfcAdapter?) {
     private val callbackType by lazy { Class.forName("android.nfc.NfcAdapter\$NfcVendorNciCallback") }
 
     val isSupported: Boolean
@@ -303,7 +248,67 @@ private class RawNciTransport(private val context: Context, private val adapter:
             findMethod(NfcAdapter::class.java, "unregisterNfcVendorNciCallback", callbackType)
         }.isSuccess
 
-    fun command(oid: Int, payload: ByteArray): ByteArray {
+    fun readConfig(ids: List<Int>): Map<Int, ByteArray> {
+        val values = linkedMapOf<Int, ByteArray>()
+        runCatching { values.putAll(getConfig(ids)) }
+        for (parameter in ids) {
+            if (parameter !in values) {
+                runCatching { values.putAll(getConfig(listOf(parameter))) }
+            }
+        }
+        return values
+    }
+
+    fun setConfig(parameters: List<Pair<Int, ByteArray>>) {
+        val size = 1 + parameters.sumOf { 2 + it.second.size }
+        val payload = ByteArray(size)
+        payload[0] = parameters.size.toByte()
+        var offset = 1
+        parameters.forEach { (id, value) ->
+            payload[offset++] = id.toByte()
+            payload[offset++] = value.size.toByte()
+            value.copyInto(payload, offset)
+            offset += value.size
+        }
+        val response = command(CoreSetConfig, payload)
+        val status = response.firstOrNull()?.toInt()?.and(0xFF)
+            ?: throw NfcEmulationException(context.getString(R.string.raw_set_config_empty))
+        if (status != 0) {
+            val rejected = if (response.size >= 2) {
+                response.drop(2).joinToString { "0x%02X".format(it.toInt() and 0xFF) }
+            } else {
+                context.getString(R.string.raw_unknown_parameters)
+            }
+            throw NfcEmulationException(context.getString(R.string.raw_set_config_failed, status, rejected))
+        }
+    }
+
+    fun getConfig(ids: List<Int>): Map<Int, ByteArray> {
+        val request = byteArrayOf(ids.size.toByte(), *ids.map(Int::toByte).toByteArray())
+        val response = command(CoreGetConfig, request)
+        if (response.size < 2) throw NfcEmulationException(context.getString(R.string.raw_get_config_malformed))
+        val status = response[0].toInt() and 0xFF
+        if (status != 0) throw NfcEmulationException(context.getString(R.string.raw_get_config_failed, status))
+
+        val count = response[1].toInt() and 0xFF
+        var offset = 2
+        return buildMap {
+            repeat(count) {
+                if (offset + 2 > response.size) {
+                    throw NfcEmulationException(context.getString(R.string.raw_config_truncated))
+                }
+                val id = response[offset++].toInt() and 0xFF
+                val length = response[offset++].toInt() and 0xFF
+                if (offset + length > response.size) {
+                    throw NfcEmulationException(context.getString(R.string.raw_parameter_truncated, id))
+                }
+                put(id, response.copyOfRange(offset, offset + length))
+                offset += length
+            }
+        }
+    }
+
+    private fun command(oid: Int, payload: ByteArray): ByteArray {
         val nfcAdapter = adapter ?: throw NfcEmulationException(context.getString(R.string.nfc_unavailable))
         try {
             val register = findMethod(
