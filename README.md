@@ -72,7 +72,7 @@ These demo screenshots were captured from the Android Emulator. The editor uses 
 
 ## F-Droid preparation
 
-F-Droid listing text, changelog, and emulator screenshots are stored in [`fastlane/metadata/android/`](fastlane/metadata/android/). The [F-Droid build workflow](.github/workflows/fdroid.yml) validates the source build with the F-Droid buildserver container.
+F-Droid listing text, changelog, and emulator screenshots are stored in [`fastlane/metadata/android/`](fastlane/metadata/android/). The [F-Droid build workflow](.github/workflows/fdroid.yml) validates the source build with the F-Droid buildserver container. F-Droid signs the APKs it builds, so the build recipe in [`.github/fdroid/metadata.yml.in`](.github/fdroid/metadata.yml.in) passes `-PallowUnsignedRelease=true`; without it, `assembleRelease` stops when no signing key is configured.
 
 ### Signed release builds
 

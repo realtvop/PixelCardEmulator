@@ -72,7 +72,7 @@
 
 ## F-Droid 准备
 
-F-Droid 的商店文案、更新日志和模拟器截图已放在 [`fastlane/metadata/android/`](fastlane/metadata/android/)。[F-Droid 构建 workflow](.github/workflows/fdroid.yml) 会使用 F-Droid buildserver 容器验证源码构建。
+F-Droid 的商店文案、更新日志和模拟器截图已放在 [`fastlane/metadata/android/`](fastlane/metadata/android/)。[F-Droid 构建 workflow](.github/workflows/fdroid.yml) 会使用 F-Droid buildserver 容器验证源码构建。F-Droid 会用自己的密钥给它构建的 APK 签名，所以 [`.github/fdroid/metadata.yml.in`](.github/fdroid/metadata.yml.in) 里的构建配方会传入 `-PallowUnsignedRelease=true`；不传这个属性时，没有配置签名密钥的 `assembleRelease` 会直接报错。
 
 ### 签名发布构建
 

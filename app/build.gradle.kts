@@ -30,8 +30,11 @@ val releaseSigningConfigured = listOf(
 val releaseTaskRequested = gradle.startParameter.taskNames.any {
     it.substringAfterLast(":").contains("release", ignoreCase = true)
 }
-if (releaseTaskRequested && !releaseSigningConfigured) {
-    error("Release signing is not configured. Create keystore.properties or set the ANDROID_KEYSTORE_* environment variables.")
+// F-Droid builds the release APK unsigned and signs it with its own key, so its recipe passes
+// -PallowUnsignedRelease=true.
+val allowUnsignedRelease = providers.gradleProperty("allowUnsignedRelease").map(String::toBoolean).getOrElse(false)
+if (releaseTaskRequested && !releaseSigningConfigured && !allowUnsignedRelease) {
+    error("Release signing is not configured. Create keystore.properties, set the ANDROID_KEYSTORE_* environment variables, or pass -PallowUnsignedRelease=true for an unsigned build.")
 }
 
 // Only the APK attached to GitHub releases asks GitHub for newer versions; the release workflow passes

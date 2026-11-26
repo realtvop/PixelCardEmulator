@@ -50,28 +50,17 @@ jobs:
           FDROID_SERVER: ${{ runner.temp }}/fdroidserver
         run: |
           set -eux
-          mkdir -p "$FDROID_DATA/.home"
+          # The script starts as root, then builds as the image's vagrant user.
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
-            --env HOME=/build/.home \
             --entrypoint /bin/bash \
             --volume "$FDROID_DATA:/build" \
             --volume "$FDROID_SERVER:/opt/fdroidserver:ro" \
+            --volume "$GITHUB_WORKSPACE/.github/fdroid:/opt/ci:ro" \
             --env FDROID_APP_ID="$FDROID_APP_ID" \
             --env FDROID_VERSION_CODE="$(sed -n 's/.*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -n 1)" \
+            --env HOST_OWNER="$(id -u):$(id -g)" \
             registry.gitlab.com/fdroid/fdroidserver:buildserver \
-            -lc '
-              set -eux
-              . /etc/profile
-              export fdroidserver=/opt/fdroidserver
-              export PYTHONPATH="$fdroidserver"
-              export PATH="$fdroidserver:$PATH"
-              export JAVA_HOME="$(java -XshowSettings:properties -version 2>&1 > /dev/null | sed -n "s/^.*java.home = //p" | tr -d " ")"
-              cd /build
-              python3 -m fdroidserver readmeta
-              python3 -m fdroidserver lint "$FDROID_APP_ID"
-              python3 -m fdroidserver build --test --verbose "$FDROID_APP_ID:$FDROID_VERSION_CODE"
-            '
+            /opt/ci/build-in-container.sh
 
       - name: Upload F-Droid build artifacts
         uses: actions/upload-artifact@v4

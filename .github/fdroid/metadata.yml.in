@@ -17,6 +17,8 @@ Builds:
     subdir: app
     gradle:
       - yes
+    gradleprops:
+      - allowUnsignedRelease=true
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
