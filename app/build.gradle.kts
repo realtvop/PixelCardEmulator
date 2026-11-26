@@ -48,8 +48,8 @@ android {
         // Dynamic color needs Android 12, so the theme has no static fallback palette.
         minSdk = 35
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.1.2"
 
         buildConfigField("boolean", "GITHUB_UPDATE_CHECK", githubUpdateCheck.toString())
     }

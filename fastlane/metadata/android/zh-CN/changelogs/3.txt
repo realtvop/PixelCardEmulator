@@ -1,0 +1,1 @@
+- 从 GitHub Releases 下载的 APK 在有新版本发布时，会在卡片列表顶部显示提示横幅。F-Droid 版不会检查更新。

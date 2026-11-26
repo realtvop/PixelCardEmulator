@@ -1,0 +1,1 @@
+- The APK from GitHub Releases now shows a banner at the top of the card list when a newer version is published. F-Droid builds do not check for updates.
