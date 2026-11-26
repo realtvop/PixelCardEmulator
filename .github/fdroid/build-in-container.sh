@@ -32,4 +32,6 @@ export JAVA_HOME
 cd /build
 python3 -m fdroidserver readmeta
 python3 -m fdroidserver lint "$FDROID_APP_ID"
-python3 -m fdroidserver build --test --verbose "$FDROID_APP_ID:$FDROID_VERSION_CODE"
+# Without --stop, fdroid build logs a failed build and still exits with 0.
+python3 -m fdroidserver build --stop --test --verbose "$FDROID_APP_ID:$FDROID_VERSION_CODE"
+test -f "tmp/${FDROID_APP_ID}_${FDROID_VERSION_CODE}.apk"

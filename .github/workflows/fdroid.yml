@@ -44,6 +44,15 @@ jobs:
             .github/fdroid/metadata.yml.in \
             > "$RUNNER_TEMP/fdroiddata/metadata/$FDROID_APP_ID.yml"
 
+          # fdroidserver sets SOURCE_DATE_EPOCH from the metadata file's last commit.
+          # Left uncommitted, the value is empty, and Debian's JDK then fails as soon
+          # as Gradle writes a properties file.
+          git -C "$RUNNER_TEMP/fdroiddata" add "metadata/$FDROID_APP_ID.yml"
+          git -C "$RUNNER_TEMP/fdroiddata" \
+            -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit --quiet --message "Add $FDROID_APP_ID for the build check"
+
       - name: Build with F-Droid buildserver container
         env:
           FDROID_DATA: ${{ runner.temp }}/fdroiddata
